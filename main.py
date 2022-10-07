@@ -5,51 +5,48 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from time import sleep
 
+import footlocker
+
 
 # All pages are in form of "https://www.NAME.domain"
 def strip_webpage_name(web_adress: str):
     return web_adress[web_adress.find(".") + 1: web_adress.rfind(".")]
 
 
-def search_elements(driver, elem_name, by_id):
-    if by_id:
-        return driver.find_elements(By.ID, elem_name)
-    return driver.find_elements(By.XPATH, f"//*[@class='{elem_name}']")  # TODO tests
+def search_elements(driver, xpath):
+    return driver.find_elements(By.XPATH, xpath)  # TODO tests
 
 
-def accept_cookies(driver, cookie_button: tuple[str, bool], accept_script) -> bool:
+def accept_cookies(driver, cookie_button: str):
     if cookie_button is None:
-        return True
+        return
 
-    button = cookie_button[0]
-    by_id = cookie_button[1]
-    actual_button = search_elements(driver, button, by_id)
+    actual_button = search_elements(driver, cookie_button)
     if len(actual_button) != 0:
         print("Found cookie button")
         actual_button[0].click()
-        # driver.execute_script(accept_script)
-        return True
 
     print("Could not find cookie button")
-    return False
 
 
-def make_search(driver, query: str, search_button: tuple[str, bool],
-                search_field: tuple[str, bool], button_click_script: str) -> bool:
-    input_field = search_elements(driver, search_button[0], search_button[1])
-    if len(input_field) != 0:
-        print("Trying to search")
-        # driver.execute_script(button_click_script)
-        input_field[0].click()
-        input_field = search_elements(driver, search_field[0], search_field[1])
+def make_search(driver, query: str, search_button: str,
+                search_field: str) -> bool:
+    if search_button is not None:
+        input_field = search_elements(driver, search_button)
         if len(input_field) != 0:
-            input_field[0].send_keys(query)
-            input_field[0].send_keys(Keys.ENTER)
+            print("Trying to search")
+            input_field[0].click()
         else:
-            print("Could not find search_field")
+            print("Could not find search button")
             return False
+
+    input_field = search_elements(driver, search_field)
+    if len(input_field) != 0:
+        input_field[0].send_keys(query)
+        sleep(0.5)
+        input_field[0].send_keys(Keys.ENTER)
     else:
-        print("Could not find search button")
+        print("Could not find search_field")
         return False
 
     return True
@@ -74,15 +71,13 @@ def main():
         driver.get(page)
 
         module_name = strip_webpage_name(page)
-        curr_site_module = importlib.import_module(module_name) #TODO think of a better way
+        curr_site_module = importlib.import_module(module_name)  # TODO think of a better way
         sleep(1)
 
-        if not accept_cookies(driver, curr_site_module.cookie_button, curr_site_module.cookie_accept_script):
-            return -1
+        accept_cookies(driver, curr_site_module.cookie_button)
         sleep(1)
 
-        if not make_search(driver, query, curr_site_module.search_button, curr_site_module.search_field,
-                           curr_site_module.search_button_click_script):
+        if not make_search(driver, query, curr_site_module.search_button, curr_site_module.search_field):
             return -1
         sleep(1)
 
@@ -92,18 +87,22 @@ def main():
         return curr_site_module.gather_info(driver)
 
 
-def test_footlocker():
+def test_website(site_address):
     chrome_options = Options()
     chrome_options.add_experimental_option("detach", True)
     chrome_options.add_argument("start-maximized")
     driver = webdriver.Chrome(executable_path="C:\\progy\\chromedriver.exe", options=chrome_options)
-    driver.get("https://www.footlocker.cz")
-    sleep(4)
-    make_search(driver, "New Balance 574", ("HeaderSearch_search_query", True), ("HeaderSearch_search_query", True),
-                "document.getElementsByClassName(\"SearchForm-button\")[0]"
-                ".dispatchEvent(new Event(\"click\"))")
+    driver.get(site_address)
+    sleep(2)
+    module_name = strip_webpage_name(site_address)
+    site_module = importlib.import_module(module_name)
+
+    accept_cookies(driver, site_module.cookie_button)
+    assert make_search(driver, "Adidas forum", site_module.search_button, site_module.search_field)
+    sort_items_on_page(driver, site_module.price_sort_scripts)
+    site_module.gather_info(driver)
 
 
 if __name__ == '__main__':
-    # main()
-    test_footlocker()
+    #main()
+    test_website("https://www.footpatrol.com/")
