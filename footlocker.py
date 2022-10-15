@@ -1,13 +1,11 @@
 from selenium.webdriver.common.by import By
 
+# https://footlocker.cz/
+
 cookie_button = "//*[contains(text(), 'onetrust-accept-btn-handler')]"
 search_button = "//input[@id='HeaderSearch_search_query']"
 search_field = search_button
 
-cookie_accept_script = "document.getElementById(\"onetrust-accept-btn-handler\")" \
-                       ".dispatchEvent(new Event(\"click\"))"
-search_button_click_script = "document.getElementsByClassName(\"SearchForm-button\")[0]" \
-                             ".dispatchEvent(new Event(\"click\"))"
 price_sort_scripts = ["document.getElementById(\"ProductSortBy_selectCustom_sortHelper\").click()",
                       "document.getElementById(\"price-asc\").click()"]
 

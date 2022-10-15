@@ -1,4 +1,5 @@
 from selenium.webdriver.common.by import By
+
 # https://www.footpatrol.com/
 
 # Buttons/fields are in a form of xpath
@@ -7,10 +8,6 @@ search_button = "//*[@id='searchButton']"
 search_field = "//*[@id='srchInput']"
 
 # Scripts are in a form of web scripts
-cookie_accept_script = "document.getElementsByClassName(\"btn btn-level1 accept-all-cookies\")[0]" \
-                       ".dispatchEvent(new Event(\"click\"))"
-search_button_click_script = "document.getElementById(\"searchButton\")." \
-                             "dispatchEvent(new Event(\"click\"))"
 price_sort_scripts = ["document.querySelector('[value=price-low-high]').selected = true",
                       "document.getElementById(\"sortFormTop\").dispatchEvent(new Event(\"submit\"))"]
 
