@@ -8,7 +8,7 @@ from typing import Optional
 
 
 # All pages are in form of "https://Optional[www.]NAME.[something]"
-def strip_webpage_name(web_adress: str):
+def get_module_name(web_adress: str):
     if web_adress.count("www") != 1:
         return web_adress[web_adress.find("//") + 2: web_adress.find(".")]
 
@@ -69,27 +69,56 @@ def main():
     chrome_options.add_argument("start-maximized")
     driver = webdriver.Chrome(executable_path="C:\\progy\\chromedriver.exe", options=chrome_options)
 
-    pages = ["https://www.footpatrol.com", "https://www.size.co.uk/", "https://www.footlocker.cz"]
-    query = "Nike Air Force"
+    with open("website_names", "r") as website_names, open("module_names", "r") as module_names:
+        query = "Nike Air Force"
+        for website_name, module_name in map(
+                lambda names: (names[0][:names[0].find(";")], names[1][:names[1].find(";")]),
+                zip(website_names, module_names)):
+            try:
+                driver.get(website_name)
+            except Exception as ex:
+                print(f"{ex}\nCould not open {website_name}, skipping")
+                continue
 
-    for page in pages:
-        driver.get(page)
+            try:
+                curr_site_module = importlib.import_module(module_name)  # TODO think of a better way
+            except Exception as ex:
+                print(f"{ex}\nCould not import module {module_name}, skipping")
+                continue
+            sleep(3)
 
-        module_name = strip_webpage_name(page)
-        curr_site_module = importlib.import_module(module_name)  # TODO think of a better way
-        sleep(1)
+            try:
+                accept_cookies(driver, curr_site_module.cookie_button)
+            except Exception as ex:
+                print(f"{ex}\nAn error occured during trying to accept cookies on {website_name}, skipping")
+                continue
+            sleep(3)
 
-        accept_cookies(driver, curr_site_module.cookie_button)
-        sleep(1)
+            try:
+                make_search(driver, query, curr_site_module.search_button, curr_site_module.search_field)
+            except Exception as ex:
+                print(f"{ex}\nAn error occured during the search fase on {website_name}, skipping")
+                continue
 
-        if not make_search(driver, query, curr_site_module.search_button, curr_site_module.search_field):
-            return -1
-        sleep(1)
+            sleep(3)
 
-        sort_items_on_page(driver, curr_site_module.price_sort_scripts)
-        sleep(1)
+            try:
+                sort_items_on_page(driver, curr_site_module.price_sort_scripts)
+            except Exception as ex:
+                print(f"{ex}\nAn error occured during the sorting phase on {website_name}, skipping")
+                continue
+            sleep(3)
+            print(f"{website_name}:")
+            try:
+                if not curr_site_module.gather_info(driver):
+                    print(f"Could not gather info on {website_name}")
+            except Exception as ex:
+                print(f"{ex}\nAn error occured during the \"gather info\" phase, skipping {website_name}")
+                continue
 
-        return curr_site_module.gather_info(driver)
+            for i in range(100):
+                print('=', end='')
+            print()
 
 
 def test_website(site_address):
@@ -98,10 +127,10 @@ def test_website(site_address):
     chrome_options.add_argument("start-maximized")
     driver = webdriver.Chrome(executable_path="C:\\progy\\chromedriver.exe", options=chrome_options)
     driver.get(site_address)
-    module_name = strip_webpage_name(site_address)
-    site_module = importlib.import_module(module_name)
+    # module_name = get_module_name(site_address)
+    site_module = importlib.import_module("jdsports")
 
-    sleep(2)
+    sleep(4)
     accept_cookies(driver, site_module.cookie_button)
     assert make_search(driver, "New Balance 574", site_module.search_button, site_module.search_field)
     sleep(2)
@@ -111,5 +140,5 @@ def test_website(site_address):
 
 
 if __name__ == '__main__':
-    # main()
-    test_website("https://answear.cz/c/on")
+    main()
+    # test_website("https://www.global.jdsports.com/")
