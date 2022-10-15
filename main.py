@@ -5,12 +5,17 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from time import sleep
 
-import footlocker
+
+def find_first_dot_index(string: str):
+    return string.find(".")
 
 
-# All pages are in form of "https://www.NAME.domain"
+# All pages are in form of "https://www.NAME.something"
 def strip_webpage_name(web_adress: str):
-    return web_adress[web_adress.find(".") + 1: web_adress.rfind(".")]
+    dot_index = find_first_dot_index(web_adress)
+    return web_adress[dot_index + 1:
+                      dot_index + 1 +
+                      find_first_dot_index(web_adress[dot_index + 1:])]
 
 
 def search_elements(driver, xpath):
@@ -64,7 +69,7 @@ def main():
     chrome_options.add_argument("start-maximized")
     driver = webdriver.Chrome(executable_path="C:\\progy\\chromedriver.exe", options=chrome_options)
 
-    pages = ["https://www.footlocker.cz", "https://www.footpatrol.com"]
+    pages = ["https://www.footpatrol.com", "https://www.size.co.uk/", "https://www.footlocker.cz"]
     query = "Nike Air Force"
 
     for page in pages:
@@ -93,16 +98,18 @@ def test_website(site_address):
     chrome_options.add_argument("start-maximized")
     driver = webdriver.Chrome(executable_path="C:\\progy\\chromedriver.exe", options=chrome_options)
     driver.get(site_address)
-    sleep(2)
     module_name = strip_webpage_name(site_address)
     site_module = importlib.import_module(module_name)
 
+    sleep(2)
     accept_cookies(driver, site_module.cookie_button)
-    assert make_search(driver, "Adidas forum", site_module.search_button, site_module.search_field)
+    make_search(driver, "Adidas forum", site_module.search_button, site_module.search_field)
+    sleep(1)
     sort_items_on_page(driver, site_module.price_sort_scripts)
+    sleep(1)
     site_module.gather_info(driver)
 
 
 if __name__ == '__main__':
     #main()
-    test_website("https://www.footpatrol.com/")
+    test_website("https://www.urbanindustry.co.uk")
