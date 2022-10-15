@@ -37,8 +37,7 @@ def gather_info(driver) -> bool:
         if len(price) == 0:
             price = item.find_elements(By.CLASS_NAME, "snize-price")
             if len(price) == 0:
-                print(f"Could not find price for element {i}")
-                print(f"{i} {name} no price")
+                print(f"Could not find price for element {i}\n{i} {name[0].text} no price")
                 continue
 
         print(i, name[0].text, price[0].text)

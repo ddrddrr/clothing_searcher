@@ -4,25 +4,24 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from time import sleep
+from typing import Optional
 
 
-def find_first_dot_index(string: str):
-    return string.find(".")
-
-
-# All pages are in form of "https://www.NAME.something"
+# All pages are in form of "https://Optional[www.]NAME.[something]"
 def strip_webpage_name(web_adress: str):
-    dot_index = find_first_dot_index(web_adress)
+    if web_adress.count("www") != 1:
+        return web_adress[web_adress.find("//") + 2: web_adress.find(".")]
+
+    dot_index = web_adress.find('.')
     return web_adress[dot_index + 1:
-                      dot_index + 1 +
-                      find_first_dot_index(web_adress[dot_index + 1:])]
+                      dot_index + 1 + web_adress[dot_index + 1:].find('.')]
 
 
-def search_elements(driver, xpath):
+def search_elements(driver, xpath: str):
     return driver.find_elements(By.XPATH, xpath)  # TODO tests
 
 
-def accept_cookies(driver, cookie_button: str):
+def accept_cookies(driver, cookie_button: Optional[str]) -> None:
     if cookie_button is None:
         return
 
@@ -30,11 +29,12 @@ def accept_cookies(driver, cookie_button: str):
     if len(actual_button) != 0:
         print("Found cookie button")
         actual_button[0].click()
+        return
 
     print("Could not find cookie button")
 
 
-def make_search(driver, query: str, search_button: str,
+def make_search(driver, query: str, search_button: Optional[str],
                 search_field: str) -> bool:
     if search_button is not None:
         input_field = search_elements(driver, search_button)
@@ -57,7 +57,7 @@ def make_search(driver, query: str, search_button: str,
     return True
 
 
-def sort_items_on_page(driver, scripts):
+def sort_items_on_page(driver, scripts) -> None:
     # TODO think about return value in case of failure
     for script in scripts:
         driver.execute_script(script)
@@ -103,13 +103,13 @@ def test_website(site_address):
 
     sleep(2)
     accept_cookies(driver, site_module.cookie_button)
-    make_search(driver, "Adidas forum", site_module.search_button, site_module.search_field)
-    sleep(1)
+    assert make_search(driver, "New Balance 574", site_module.search_button, site_module.search_field)
+    sleep(2)
     sort_items_on_page(driver, site_module.price_sort_scripts)
-    sleep(1)
+    sleep(2)
     site_module.gather_info(driver)
 
 
 if __name__ == '__main__':
-    #main()
-    test_website("https://www.urbanindustry.co.uk")
+    # main()
+    test_website("https://answear.cz/c/on")
