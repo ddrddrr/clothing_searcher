@@ -26,7 +26,7 @@ def get_price_file_name(price: str) -> str:
     if re.search(r"(£+|[Pp]ound)", price):
         return "prices\\prices_pounds"
 
-    if re.search(r"([Kk][Čč])+", price):
+    if re.search(r"([Kk][Čč])+|([Cc][Zz][Kk])+", price):
         return "prices\\prices_cz"
 
     return "prices\\prices_default"

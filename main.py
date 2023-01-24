@@ -4,20 +4,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from time import sleep
-from typing import Optional, List
+from typing import Optional, List, Tuple
+import on_site_search
 from price_files_misc import create_price_files
-
-
-def search_elements_xpath(driver, xpath: str) -> Optional[List[webdriver.remote.webelement.WebElement]]:
-    assert driver is not None
-
-    try:
-        res = driver.find_elements(By.XPATH, xpath)
-    except Exception as ex:
-        print(f"Could not find elements, {ex}")
-        return None
-
-    return res if len(res) != 0 else None
 
 
 def accept_cookies(driver, cookie_button: Optional[str]) -> None:
@@ -26,7 +15,7 @@ def accept_cookies(driver, cookie_button: Optional[str]) -> None:
     if cookie_button is None:
         return
 
-    actual_button = search_elements_xpath(driver, cookie_button)
+    actual_button = driver.find_elements(By.XPATH, cookie_button)
     if actual_button is not None:
         print("Found cookie button")
         actual_button[0].click()
@@ -42,15 +31,15 @@ def make_search(driver, query: str, search_button: Optional[str],
     assert driver is not None
 
     if search_button is not None:
-        input_field = search_elements_xpath(driver, search_button)
-        if input_field is not None:
+        button = driver.find_elements(By.XPATH, search_button)
+        if button is not None:
             print("Trying to search")
-            input_field[0].click()
+            button[0].click()
         else:
             print("Could not find search button")
             return False
 
-    input_field = search_elements_xpath(driver, search_field)
+    input_field = driver.find_elements(By.XPATH, search_field)
     if input_field is not None:
         input_field[0].send_keys(query)
         sleep(0.5)
@@ -60,6 +49,16 @@ def make_search(driver, query: str, search_button: Optional[str],
         return False
 
     return True
+
+
+def prep_item_gathering(driver, query: str, buttons: Tuple[Optional[str], Optional[str], str]) -> None:
+    cookie_button, search_button, search_field = buttons
+    try:
+        accept_cookies(driver, cookie_button)
+    except Exception as ex:
+        print(f"{ex}Problem during cookie acception")
+    sleep(1)
+    assert make_search(driver, query, search_button, search_field)
 
 
 def sort_items_on_page(driver, scripts: List[str]) -> None:
@@ -102,14 +101,14 @@ def main():
             try:
                 accept_cookies(driver, curr_site_module.cookie_button)
             except Exception as ex:
-                print(f"{ex}\nAn error occured during trying to accept cookies on {website_name}, skipping")
+                print(f"{ex}\nAn error occurred during trying to accept cookies on {website_name}, skipping")
                 continue
             sleep(3)
 
             try:
                 make_search(driver, query, curr_site_module.search_button, curr_site_module.search_field)
             except Exception as ex:
-                print(f"{ex}\nAn error occured during the search fase on {website_name}, skipping")
+                print(f"{ex}\nAn error occurred during the search phase on {website_name}, skipping")
                 continue
 
             sleep(3)
@@ -117,7 +116,7 @@ def main():
             try:
                 sort_items_on_page(driver, curr_site_module.price_sort_scripts)
             except Exception as ex:
-                print(f"{ex}\nAn error occured during the sorting phase on {website_name}, skipping")
+                print(f"{ex}\nAn error occurred during the sorting phase on {website_name}, skipping")
                 continue
             sleep(3)
 
@@ -126,7 +125,7 @@ def main():
                 if not curr_site_module.gather_info(driver):
                     print(f"Could not gather info on {website_name}")
             except Exception as ex:
-                print(f"{ex}\nAn error occured during the \"gather info\" phase, skipping {website_name}")
+                print(f"{ex}\nAn error occurred during the \"gather info\" phase, skipping {website_name}")
                 continue
 
             for i in range(100):
@@ -134,24 +133,52 @@ def main():
             print()
 
 
-def test_website(site_address):
+def remove_last_dot(name: str):
+    new = name[name.find(".") + 1:]
+    return new[:new.find(".")]
+
+
+def take_screenshots():
+    chrome_options = Options()
+    chrome_options.add_argument("start-maximized")
+    driver = webdriver.Chrome(executable_path="C:\\progy\\chromedriver.exe", options=chrome_options)
+    with open("sneaker_wpages.txt") as wpages:
+        for name in wpages:
+            try:
+                driver.get(name)
+            except Exception as ex:
+                continue
+
+            sleep(0.5)
+            try:
+                driver.get_screenshot_as_file(f".\\screenshots\\{remove_last_dot(name)}.png")
+            except Exception as ex:
+                continue
+
+
+def test_website(website_name):
+    buttons, sort_scripts, \
+    all_items_xpath, name_xpath, price_xpath = on_site_search.SITES_INFO[website_name]
+
+    query = "New balance 574"
+
     chrome_options = Options()
     chrome_options.add_experimental_option("detach", True)
     chrome_options.add_argument("start-maximized")
-    driver = webdriver.Chrome(executable_path="C:\\progy\\chromedriver.exe", options=chrome_options)
-    driver.get(site_address)
-    site_module = importlib.import_module("site_files.jdsports")
+    driver = webdriver.Chrome(executable_path="../chromedriver.exe", options=chrome_options)
+
+    driver.get(website_name)
     create_price_files()
 
-    sleep(2)
-    accept_cookies(driver, site_module.cookie_button)
-    assert make_search(driver, "New Balance 574", site_module.search_button, site_module.search_field)
-    sleep(2)
-    sort_items_on_page(driver, site_module.price_sort_scripts)
-    sleep(4)
-    site_module.gather_info(driver)
+    sleep(1)
+    prep_item_gathering(driver, query, buttons)
+    sleep(1)
+    sort_items_on_page(driver, sort_scripts)
+    sleep(1)
+    on_site_search.gather_info(driver, all_items_xpath, name_xpath, price_xpath)
 
 
 if __name__ == '__main__':
-    main()
-    # test_website("https://www.global.jdsports.com")
+    # main()
+    test_website("https://www.urbanindustry.co.uk/")
+    # take_screenshots()
