@@ -22,7 +22,6 @@ class Currency:
 class CurrencyGroup:
     def __init__(self, currency: Currency) -> None:
         self.currency = currency
-        # [ [([],...,...), ([],...,...)], [([],...,...), ([],...,...)] ]
         self.items: List[cpm.WEBSITE_ITEMS] = []
         self.curr_website_items = []
 
@@ -71,7 +70,7 @@ class AllCurrencyGroups:
                 prices, name, website = item
                 write_all_to_pricefile(i, prices, name, website, pf)
 
-    def print_all_items(self):
+    def print_items(self):
         if not self.sorted_items:
             self.sort_all_items()
 

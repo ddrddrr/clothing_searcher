@@ -8,13 +8,13 @@ from time import sleep
 from typing import Optional, List, Tuple
 from currency_processing import find_currency_in_str, AllCurrencyGroups
 import price_output as po
-from website_info import ALL_ITEMS_XPATH, NAME_XPATH, PRICE_XPATH, HREF_XPATH
-from misc import find_first_digit, find_last_digit
+from website_info import COOKIE_INFO, SEARCH_INFO, XPATH_INFO
 
 CHROME_OPTIONS = Options()
 CHROME_OPTIONS.add_experimental_option("detach", True)
 CHROME_OPTIONS.add_argument("start-maximized")
 DRIVER = webdriver.Chrome(executable_path="chromedriver.exe", options=CHROME_OPTIONS)
+MAX_SCRIPT_REPEAT = 20
 
 
 def wait_appear_xpath(xpath: str):
@@ -41,7 +41,16 @@ def wait_clickable_xpath(xpath: str):
     return found_elem
 
 
-def accept_cookies(cookie_button_xpath: Optional[str]) -> bool:
+def accept_cookies(non_standart_button_scripts: Optional[List[str]], cookie_button_xpath: Optional[str]) -> bool:
+    if non_standart_button_scripts is not None:
+        if execute_scripts(non_standart_button_scripts):
+            print("Clicked cookie button")
+            if cookie_button_xpath is None:
+                return True
+        else:
+            print("Could not execute cookie scripts, skipping")
+            return False
+
     if cookie_button_xpath is None:
         print("No cookie button on this website")
         return True
@@ -57,8 +66,25 @@ def accept_cookies(cookie_button_xpath: Optional[str]) -> bool:
     return True
 
 
-def make_search(query: str, search_button_xpath: Optional[str],
-                search_field_xpath: str) -> bool:
+def make_search(query: str, non_standart_seacrh_scripts: Optional[List[str]],
+                search_button_xpath: Optional[str], search_field_xpath: str) -> bool:
+    if non_standart_seacrh_scripts is not None:
+        if execute_scripts(non_standart_seacrh_scripts):
+
+            # SPECIAL CASES #################################################################
+            if DRIVER.current_url == "https://www.43einhalb.com/#":
+                buf = "document.getElementById('search_word').value=" + "'" + query + "'"
+                DRIVER.execute_script(buf)
+                DRIVER.execute_script("document.getElementById('pageSearchDesktop').submit()")
+            #################################################################################
+
+            print("Successfully executed search scripts")
+            if search_button_xpath is None and search_field_xpath is None:
+                return True
+        else:
+            print("Could not execute search scripts")
+            return False
+
     if search_button_xpath is not None:
         search_button = wait_clickable_xpath(search_button_xpath)
         if search_button is None:
@@ -83,30 +109,41 @@ def make_search(query: str, search_button_xpath: Optional[str],
     return True
 
 
-def prep_item_gathering(query: str, buttons: Tuple[Optional[str], Optional[str], str]) -> bool:
-    cookie_button_xpath, search_button_xpath, search_field_xpath = buttons
+def prep_item_gathering(query: str, cookie_info: COOKIE_INFO, search_info: SEARCH_INFO) -> bool:
+    cookie_button_xpath, cookie_scripts = cookie_info
+    seacrh_scripts, search_button_xpath, search_field_xpath = search_info
+    return (accept_cookies(cookie_button_xpath, cookie_scripts) and
+            make_search(query, seacrh_scripts, search_button_xpath, search_field_xpath))
 
-    return (accept_cookies(cookie_button_xpath) and
-            make_search(query, search_button_xpath, search_field_xpath))
+
+def execute_scripts(scripts: List[str], max_script_repeat=MAX_SCRIPT_REPEAT) -> bool:
+    # TODO change this polling to something proper
+    i = 0
+    same_script_count = 0
+    while i < len(scripts):
+        script = scripts[i]
+        sleep(0.5)
+        try:
+            DRIVER.execute_script(script)
+        except Exception as ex:
+            if same_script_count == max_script_repeat:
+                return False
+            print(f"Problem with script {i}", ex)
+            same_script_count += 1
+            sleep(0.5)
+        else:
+            same_script_count = 0
+            i += 1
+            sleep(0.5)
+
+    return True
 
 
 def sort_items_on_page(scripts: List[str]) -> bool:
     print("Trying to sort items on page")
-    # TODO change this polling to something proper
-    i = 0
-    while i < len(scripts):
-        script = scripts[i]
-        try:
-            DRIVER.execute_script(script)
-        except Exception as ex:
-            print(ex)
-            sleep(0.5)
-        else:
-            i += 1
-            sleep(0.5)
-
-    print("Items on page are sorted")
-    return True
+    res = execute_scripts(scripts)
+    print("Items on page are sorted") if res else print("Could not sort items on page")
+    return res
 
 
 def get_all_items(all_items_xpath):
@@ -145,21 +182,16 @@ def get_item_attribute(item, attribute: str, attribute_xpath: str) -> Optional[s
     return attribute
 
 
-def get_price_name_href(item, name_xpath: str, price_xpath: str, href_xpath: str) \
+def get_price_name_href(item, name_xpaths: List[str], price_xpath: str, href_xpath: str) \
         -> Tuple[Optional[str], Optional[str], Optional[str]]:
-    return (get_item_attribute(item, "textContent", name_xpath),
+    return (" ".join([get_item_attribute(item, "textContent", name_xpath) for name_xpath in name_xpaths]),
             get_item_attribute(item, "textContent", price_xpath),
             get_item_attribute(item, "href", href_xpath))
 
 
-def prep_name_price_for_saving(name: str, price: str) -> Tuple[str, str]:
-    return name.strip(), price.strip().replace(',', '.')[find_first_digit(price):find_last_digit(price) + 1]
-
-
-def gather_info(xpaths: Tuple[ALL_ITEMS_XPATH, NAME_XPATH, PRICE_XPATH, HREF_XPATH],
-                item_count_limit: int, query: str, currency_groups: AllCurrencyGroups) -> bool:
+def gather_info(xpaths: XPATH_INFO, item_count_limit: int, query: str, currency_groups: AllCurrencyGroups) -> bool:
     lst_query = query.lower().split()
-    all_items_xpath, name_xpath, price_xpath, href_xpath = xpaths
+    all_items_xpath, name_xpaths, price_xpath, href_xpath = xpaths
     current_url = DRIVER.current_url
 
     all_items = get_all_items(all_items_xpath)
@@ -181,14 +213,14 @@ def gather_info(xpaths: Tuple[ALL_ITEMS_XPATH, NAME_XPATH, PRICE_XPATH, HREF_XPA
         for i in range(min(item_count_limit, len(all_items))):
             item = all_items[i]
 
-            name, price, href = get_price_name_href(item, name_xpath, price_xpath, href_xpath)
+            name, price, href = get_price_name_href(item, name_xpaths, price_xpath, href_xpath)
             if name is None or price is None:
                 continue
             if href is None:
                 href = current_url
 
             if po.name_comply_with_query(name, lst_query):
-                name, price = prep_name_price_for_saving(name, price)
+                name, price = po.prep_name_price_for_saving(name, price)
                 item_number += 1
                 current_currency_group.add_item(price, name, href)
                 po.write_one_to_pricefile(item_number, price, name, currency, price_file)

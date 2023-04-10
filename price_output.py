@@ -1,8 +1,13 @@
 import os
-from typing import List, TextIO, Union
+from typing import List, TextIO, Union, Tuple
 from currency_proc_misc import CURRENCY_NAMES
+from misc import find_first_digit, find_last_digit
 
 PRICEFILES_DIR = r".\prices"
+
+
+def prep_name_price_for_saving(name: str, price: str) -> Tuple[str, str]:
+    return name.strip(), price.strip().replace(',', '.')[find_first_digit(price):find_last_digit(price) + 1]
 
 
 def format_price(price: Union[str, float]) -> str:
@@ -60,15 +65,9 @@ def destroy_price_files() -> None:
 
 def name_comply_with_query(name: str, query: List[str]) -> bool:
     name = name.lower().split()
-    found = False
     for qword in query:
         for nword in name:
             if qword in nword:
-                found = True
-                break
-        if not found:
-            return False
+                return True
 
-        found = False
-
-    return True
+    return False
