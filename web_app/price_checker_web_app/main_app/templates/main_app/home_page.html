@@ -1,0 +1,32 @@
+{% extends 'main_app\base_page.html' %}
+
+{% block title %}
+Search
+{% endblock %}
+
+{% block body %}
+<form method="get">
+    <label for="search_form">What are you looking for today?</label>
+    <input type="search" id="search_form" name="search_form"
+           placeholder="e.g. Nike Air Force 1" autofocus required minlength="3"><br>
+
+    <label for="currency_selector">Choose your currency</label>
+    <select id="currency_selector" name="currency_selector">
+        <option value="eur" selected>Euro</option>
+        <option value="gbp">British pound</option>
+        <option value="czk">Czech crown</option>
+        <option value="rub">Russian ruble</option>
+    </select><br>
+
+    <label for="price_selector">What are you willing to pay? Use arrows to increase/decrease</label><br>
+    <input type="range" id="price_selector" name="price_selector" min="0" max="1000" value="0"
+           oninput="num.value = this.value"><br>
+    <output id="num">0</output>
+    <br>
+
+    <label for="country_filter">Looking for a website in a specific country?</label>
+    <input type="text" id="country_filter" name="country_filter"><br><br>
+
+    <input type="submit" value="Search">
+</form>
+{% endblock %}

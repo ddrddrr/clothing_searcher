@@ -1,0 +1,35 @@
+{% extends 'main_app\base_page.html' %}
+
+{% block title %}
+Search
+{% endblock %}
+
+{% block body %}
+{% block p1 %}
+{% if search_form %}
+<form method="GET">
+    {{ search_form.brand.label }} {{ search_form.brand }}<br>
+    {{ search_form.name.label }} {{ search_form.name }}<br>
+    {{ search_form.currency.label }} {{ search_form.currency }}<br>
+    {{ search_form.min_price.label }} {{ search_form.min_price }}<br>
+    {{ search_form.max_price.label }} {{ search_form.max_price }}<br>
+    {{ search_form.country.label }} {{ search_form.country }}<br>
+    <input type="submit" value="Search">
+</form>
+{% endif %}
+{% endblock %}
+
+{% block p2 %}
+{% if items %}
+Here's what we found:
+<ul>
+    {% for item in items %}
+    <li>
+        {{ item }}
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
+
+{% endblock %}
