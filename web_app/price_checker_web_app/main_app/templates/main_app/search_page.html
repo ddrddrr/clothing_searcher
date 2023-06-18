@@ -4,9 +4,12 @@
 Search
 {% endblock %}
 
+
 {% block body %}
+
 {% block p1 %}
 {% if search_form %}
+
 <form method="GET">
     {{ search_form.brand.label }} {{ search_form.brand }}<br>
     {{ search_form.name.label }} {{ search_form.name }}<br>
@@ -14,22 +17,46 @@ Search
     {{ search_form.min_price.label }} {{ search_form.min_price }}<br>
     {{ search_form.max_price.label }} {{ search_form.max_price }}<br>
     {{ search_form.country.label }} {{ search_form.country }}<br>
-    <input type="submit" value="Search">
+    <input type="submit" name="search_submit" value="Search">
 </form>
+
+{% if brand_stats %}
+<br>
+Most popular brands:
+{% for stat in brand_stats %}
+<li>
+    {{ stat.0 }} has been searched {{ stat.1 }} times<br>
+</li>
+{% endfor %}
 {% endif %}
-{% endblock %}
+
+{% endif %}
+{% endblock p1 %}
+
 
 {% block p2 %}
-{% if items %}
+{% if qitems %}
+
 Here's what we found:
 <ul>
-    {% for item in items %}
+    {% for item in qitems %}
     <li>
-        {{ item }}
+        {{ item.0 }} ---- {% for price in item.1 %} {{ price }} | {% endfor %}<br>
+        Website - {{ item.0.website.name }} ---- <a href="{{ item.link }}"> link </a><br>
     </li>
     {% endfor %}
 </ul>
-{% endif %}
-{% endblock %}
 
-{% endblock %}
+{% endif %}
+{% endblock p2 %}
+
+
+{% block p3 %}
+{% if no_items %}
+Sorry, couldn't find anything :(
+Try searching a couple hours later
+{% endif %}
+{% endblock p3 %}
+
+
+{% endblock body %}

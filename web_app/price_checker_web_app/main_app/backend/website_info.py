@@ -113,7 +113,7 @@ SITES_INFO: Dict[SITE_NAME,
             (
                 (
                     None,
-                    "//span[@class='closeLightbox' and contains(text(),'CLOSE X')]",
+                    None,
                 ),
 
                 (
@@ -194,12 +194,12 @@ SITES_INFO: Dict[SITE_NAME,
                 [
                     "document.getElementsByClassName('BaseSelectDropdown__select__Wc73+ BaseSelectDropdown__selectHasAFilter__c2KcV Filters__filterItem__IhPPd')[0].click()",
                     "document.getElementById('price_asc_radio_0').click()",
-                    "document.getElementsByClassName('btn col-xs-12 col-lg-12 btn--fluid btn--spaced-bottom btn--sortingSubmit')[0].click()"
+                    "document.getElementsByClassName('btn xs-12 l-12 btn--fluid btn--spaced-bottom btn--sortingSubmit')[0].click()"
                 ],
                 (
                     "//div[@class='m-4 l-3 Products__productsFullWide__mix1Y xs-6']",
                     [".//div[@class='ProductItem__productCardName__DCKIH']"],
-                    ".//div[@class='Price__salePrice__FCFFF ProductItem__priceSale__XP3ik'] | .//div [@class='Price__price__CbfdW ProductItem__priceRegular__21q11']",
+                    ".//div[@class='ProductItemPrice__priceSale__PueP7'] | .//div [@class='ProductItemPrice__priceRegular__7OKlG']",
                     ".//a[@aria-label and @href]"
                 )
             ),
@@ -218,13 +218,14 @@ SITES_INFO: Dict[SITE_NAME,
                 [
                     "document.getElementsByClassName('BaseSelectDropdown__select__Wc73+ BaseSelectDropdown__selectHasAFilter__c2KcV Filters__filterItem__IhPPd')[0].click()",
                     "document.getElementById('price_asc_radio_0').click()",
-                    "document.getElementsByClassName('btn col-xs-12 col-lg-12 btn--fluid btn--spaced-bottom btn--sortingSubmit')[0].click()"
+                    "document.getElementsByClassName('btn xs-12 l-12 btn--fluid btn--spaced-bottom btn--sortingSubmit')[0].click()"
                 ],
                 (
                     "//div[@class='m-4 l-3 Products__productsFullWide__mix1Y xs-6']",
                     [".//div[@class='ProductItem__productCardName__DCKIH']"],
-                    ".//div[@class='Price__salePrice__FCFFF ProductItem__priceSale__XP3ik'] | .//div [@class='Price__price__CbfdW ProductItem__priceRegular__21q11']",
-                    ".//a[@aria-label and @href]")
+                    ".//div[@class='ProductItemPrice__priceSale__PueP7'] | .//div [@class='ProductItemPrice__priceRegular__7OKlG']",
+                    ".//a[@aria-label and @href]"
+                )
             ),
         # TODO a dumb captcha on ssense(easy to solve, but doesn't let you go further)
 
@@ -326,22 +327,20 @@ SITES_INFO: Dict[SITE_NAME,
                     [], "//div[@class='icon icon-search_m']", "//input[@type='search']"
                 ),
                 [
-                    "document.getElementsByClassName('localization')[0].click()",
-                    "document.getElementsByClassName('dropdown selected')[0].click()",
-                    "document.getElementsByClassName('option')[8].click()",
-                    "document.getElementsByClassName('apply')[0].click()",
-                    "document.getElementsByClassName('show_filters')[0].click()",
-                    "document.querySelector(\"a[title*='HHV Clothing']\").click()",
-                    "document.getElementsByClassName('filter strict')[0].click()",
-                    "document.getElementsByClassName('value no_child no_parent')[0].click()",
-                    "document.getElementsByClassName('apply')[0].click()",
-                    "document.getElementsByClassName('sort_by')[0].click()",
-                    "document.getElementsByClassName('option')[4].click()"
+                    "document.evaluate('//span[@class=\"title\" and contains(text(),\"HHV Clothing\")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()",
+
+                    "document.evaluate('//div[@class=\"title\" and contains(text(),\"Strict Search\")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()",
+
+                    "document.evaluate('//div[@class=\"apply\" and contains(text(),\"Apply\")]', document, null,XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()",
+
+                    "document.evaluate('//span[@class=\"title\" and contains(text(),\"Relevance\")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()",
+
+                    "document.evaluate('//span[@class=\"title\" and contains(text(),\"Price (ascending)\")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()"
                 ],
                 (
-                    "//div[@class='item_gallery_entry no_player responsive_l']",
+                    "//turbo-frame[contains(@id,'item_gallery_entry')]",
                     [".//span[@class='artist']", ".//span[@class='title']"],
-                    "(.//span[@class='price']/*[@class='special'] | .//span[@class='price']/*[@class='regular'])[1]",
+                    "(.//span[@class='special' or @class='regular'])[1]",
                     ".//a[@href]"
                 )
             )

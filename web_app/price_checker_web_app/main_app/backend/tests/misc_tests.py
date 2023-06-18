@@ -1,7 +1,7 @@
 from random import randint
 from itertools import chain
 # TODO not tested if works
-from backend import misc as m
+from web_app.price_checker_web_app.main_app.backend import misc as m
 
 
 def test_merge_two_sorted_lists():

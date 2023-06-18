@@ -1,5 +1,5 @@
-# TODO implement filters outlined below
 from django.db import models
+from django.utils import timezone
 
 
 # from jsonfield import JSONField
@@ -41,10 +41,11 @@ class Brand(models.Model):
 
 
 class Product(models.Model):
-    # Name of the model, without the website
+    # Name of the model, upper snake case
     name = models.CharField(max_length=300)
     # Price is always stored in euros
     price = models.FloatField()
+    currency = models.ForeignKey('Currency', on_delete=models.CASCADE)
     # The link to an item can be with a lot of query parameters
     link = models.URLField(max_length=1000)
     website = models.ForeignKey(Website, on_delete=models.CASCADE)
@@ -58,7 +59,8 @@ class Product(models.Model):
         ordering = ('price',)
 
     def __str__(self):
-        return f"{self.name} - {self.price}\n{self.website}\n{self.link}"
+        return self.name
+
 
 # class SizeChart(models.Model):
 #     brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
@@ -71,3 +73,49 @@ class Product(models.Model):
 #     us_sizes = JSONField(load_kwargs={'object_pairs_hook': OrderedDict})
 #     uk_sizes = JSONField(load_kwargs={'object_pairs_hook': OrderedDict})
 #     cm_sizes = JSONField(load_kwargs={'object_pairs_hook': OrderedDict})
+
+
+class BrandStatistics(models.Model):
+    search_count = models.PositiveIntegerField(default=0)
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ['-search_count']
+        verbose_name_plural = "Brand Statistics"
+
+    def __str__(self):
+        return self.brand
+
+
+class Currency(models.Model):
+    name = models.CharField(max_length=10)
+    # symmetrical=false by default, when using through models
+    exchange_rates = models.ManyToManyField('self', through='ExchangeRate')
+
+    class Meta:
+        verbose_name_plural = "Currencies"
+
+    def __str__(self):
+        return self.name
+
+
+class ExchangeRate(models.Model):
+    convert_from = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name="src_currency")
+    convert_to = models.ForeignKey(Currency, on_delete=models.CASCADE, related_name="dst_currency")
+    rate = models.FloatField(default=0)
+
+    def __str__(self):
+        return f"{self.convert_from.name} - {self.convert_to.name}___{self.rate}"
+
+
+class UpdateTime(models.Model):
+    items_upd_time = models.DateTimeField()
+    currencies_upd_time = models.DateTimeField()
+
+    def upd_item_timestamp(self):
+        self.items_upd_time = timezone.now()
+        self.save()
+
+    def upd_currencies_timestamp(self):
+        self.currencies_upd_time = timezone.now()
+        self.save()

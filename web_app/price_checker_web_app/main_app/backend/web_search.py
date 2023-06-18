@@ -1,20 +1,17 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions
+from sys import stderr
 from time import sleep
 from typing import Optional, List, Tuple
-from currency_processing.currency_processing_main import find_currency_in_str, AllCurrencyGroups
-import price_output as po
-from website_info import COOKIE_INFO, SEARCH_INFO, XPATH_INFO
+from .currency_processing.currency_processing_main import find_currency_in_str
+from .price_output import name_comply_with_query, prep_name_price_for_saving
+from .website_info import COOKIE_INFO, SEARCH_INFO, XPATH_INFO
+from .dirver_config import DRIVER, MAX_SCRIPT_REPEAT
 
-CHROME_OPTIONS = Options()
-CHROME_OPTIONS.add_experimental_option("detach", True)
-CHROME_OPTIONS.add_argument("start-maximized")
-DRIVER = webdriver.Chrome(executable_path="chromedriver.exe", options=CHROME_OPTIONS)
-MAX_SCRIPT_REPEAT = 20
+NAME = HREF = str
+PRICE = float
 
 
 def wait_appear_xpath(xpath: str):
@@ -61,7 +58,11 @@ def accept_cookies(non_standart_button_scripts: Optional[List[str]], cookie_butt
         return False
 
     print("Found cookie button")
-    cookie_button.click()
+    try:
+        cookie_button.click()
+    except Exception as ex:
+        return False
+
     print("Clicked cookie button")
     return True
 
@@ -88,7 +89,7 @@ def make_search(query: str, non_standart_seacrh_scripts: Optional[List[str]],
     if search_button_xpath is not None:
         search_button = wait_clickable_xpath(search_button_xpath)
         if search_button is None:
-            print("Could not locate search button, skipping")
+            print(f"Could not locate search button {search_button}, skipping")
             return False
 
         print("Found search button")
@@ -97,15 +98,21 @@ def make_search(query: str, non_standart_seacrh_scripts: Optional[List[str]],
 
     input_field = wait_appear_xpath(search_field_xpath)
     if input_field is None:
-        print("Could not find search_field, skipping")
+        print(f"Could not find search_field {search_field_xpath}, skipping")
         return False
 
     print("Found search field")
-    input_field.send_keys(query)
+    try:
+        input_field.send_keys(Keys.CONTROL + "a")
+        input_field.send_keys(Keys.DELETE)
+        input_field.send_keys(query)
+        sleep(0.5)
+        input_field.send_keys(Keys.ENTER)
+    except Exception as ex:
+        print(f"Could not send keys to search field {ex}")
+        return False
+
     print("Sent keys")
-    sleep(0.5)
-    input_field.send_keys(Keys.ENTER)
-    print("Entered keys")
     return True
 
 
@@ -127,8 +134,8 @@ def execute_scripts(scripts: List[str], max_script_repeat=MAX_SCRIPT_REPEAT) -> 
             DRIVER.execute_script(script)
         except Exception as ex:
             if same_script_count == max_script_repeat:
+                print(f"Script {script} have reached the limit of repetition")
                 return False
-            print(f"Problem with script {i}", ex)
             same_script_count += 1
             sleep(0.5)
         else:
@@ -174,57 +181,69 @@ def get_item_attribute(item, attribute: str, attribute_xpath: str) -> Optional[s
         attribute: Optional[str] = item.find_elements(By.XPATH, attribute_xpath)[0].get_attribute(attribute)
     except Exception as ex:
         print(f"{ex}\nProblem occurred, while trying to find item's {attribute}")
-        return None
+        return ""
 
     if attribute is None:
         print(f"Could not find {attribute} for {attribute_xpath}")
+        return ""
 
     return attribute
 
 
 def get_price_name_href(item, name_xpaths: List[str], price_xpath: str, href_xpath: str) \
-        -> Tuple[Optional[str], Optional[str], Optional[str]]:
+        -> Tuple[Optional[NAME], Optional[str], Optional[HREF]]:
     return (" ".join([get_item_attribute(item, "textContent", name_xpath) for name_xpath in name_xpaths]),
             get_item_attribute(item, "textContent", price_xpath),
             get_item_attribute(item, "href", href_xpath))
 
 
-def gather_info(xpaths: XPATH_INFO, item_count_limit: int, query: str, currency_groups: AllCurrencyGroups) -> bool:
+def retrieve_website_items(item_limit: int, all_items,
+                           name_xpaths: List[str], price_xpath: str, href_xpath: str,
+                           current_url, query) -> Optional[List[Tuple[NAME, PRICE, HREF]]]:
+    items = []
+    for i, item in enumerate(all_items, item_limit):
+
+        name, price, href = get_price_name_href(item, name_xpaths, price_xpath, href_xpath)
+        if name is None or price is None:
+            continue
+
+        if href is None:
+            href = current_url
+
+        if name_comply_with_query(name, query):
+            res = prep_name_price_for_saving(name, price)
+            if res is None:
+                print(f"Could not convert price to float on {current_url}", stderr)
+                return None
+            items.append((res[0], res[1], href))
+
+    return items
+
+
+def get_currency_and_item_info(xpaths: XPATH_INFO, item_count_limit: int, query: str) \
+        -> Optional[Tuple[str, List[Tuple[NAME, PRICE, HREF]]]]:
+    # TODO it will be prepared in to_python() of the django form in future
     lst_query = query.lower().split()
     all_items_xpath, name_xpaths, price_xpath, href_xpath = xpaths
     current_url = DRIVER.current_url
 
     all_items = get_all_items(all_items_xpath)
     if all_items is None:
-        print("Error occured while trying to locate items")
-        return False
+        print(f"Error occured while trying to locate items, using {all_items_xpath}")
+        return None
 
     currency = get_current_currency(all_items, price_xpath)
     if currency is None:
-        print("Error occured while trying to establish currency")
-        return False
-    current_currency_group = currency_groups.currency_groups[currency]
+        print(f"Error occured while trying to establish currency, using {price_xpath}")
+        return None
 
-    price_filename = po.get_price_file_name(currency)
-    with open(price_filename, "a", encoding="windows-1252") as price_file:
-        price_file.write(f"{current_url}\n")
-
-        item_number = 0
-        for i in range(min(item_count_limit, len(all_items))):
-            item = all_items[i]
-
-            name, price, href = get_price_name_href(item, name_xpaths, price_xpath, href_xpath)
-            if name is None or price is None:
-                continue
-            if href is None:
-                href = current_url
-
-            if po.name_comply_with_query(name, lst_query):
-                name, price = po.prep_name_price_for_saving(name, price)
-                item_number += 1
-                current_currency_group.add_item(price, name, href)
-                po.write_one_to_pricefile(item_number, price, name, currency, price_file)
-                po.print_one_item(item_number, price, name, currency)
-
-    current_currency_group.save_curr_website_items()
-    return True
+    items = retrieve_website_items(min(item_count_limit, len(all_items)),
+                                   all_items,
+                                   name_xpaths, price_xpath, href_xpath,
+                                   current_url, lst_query)
+    if items:
+        return currency, retrieve_website_items(min(item_count_limit, len(all_items)),
+                                                all_items,
+                                                name_xpaths, price_xpath, href_xpath,
+                                                current_url, lst_query)
+    return None

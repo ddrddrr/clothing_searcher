@@ -1,5 +1,5 @@
 import currency_processing_main as cp
-import currency_proc_misc as cpm
+import currency_proc_config as cpm
 
 
 def test_get_exchange_rate():

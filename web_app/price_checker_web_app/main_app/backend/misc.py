@@ -59,3 +59,32 @@ def find_last_digit(string: str) -> Optional[int]:
             return i
 
     return None
+
+
+def saveable_to_human_readable(string: str) -> str:
+    return " ".join(map(lambda word: word[0].upper() + word[1:].lower(), string.split("_")))
+
+
+def human_readable_to_saveable(string):
+    return "_".join(map(lambda word: str.upper(word), (string.split(" "))))
+
+
+def strip_website_name(name: str) -> str:
+    first_dot = 0
+    last_dot = 0
+    for i, char in enumerate(name):
+        if char == '.':
+            if first_dot == 0:
+                first_dot = i
+            else:
+                last_dot = i
+                break
+
+    return name[first_dot + 1:last_dot]
+
+
+def print_splitting_line():
+    for i in range(100):
+        print("--", end='')
+    print()
+    print()
