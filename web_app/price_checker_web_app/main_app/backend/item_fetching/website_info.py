@@ -74,40 +74,33 @@ SITES_INFO: Dict[SITE_NAME,
                 )
             ),
 
-        "https://www.urbanindustry.co.uk/":
-            (
-                (
-                    None,
-                    None,
-                ),
-
-                (
-                    None,
-                    "//input[@id='search-field']",
-                    "//input[@id='search-field']",
-                ),
-
-                [
-                    "document.getElementsByClassName('snize-main-panel-dropdown-content')[0]"
-                    ".setAttribute('style', 'display: block')",
-
-                    "document.getElementsByClassName('snize-main-panel-dropdown-relevance-desc current')[0]"
-                    ".classList.remove('current')",
-
-                    "document.getElementsByClassName('snize-main-panel-dropdown-price-asc')[0]"
-                    ".classList.add('current')",
-
-                    "document.getElementsByClassName('snize-main-panel-dropdown-price-asc current')[0]"
-                    ".click()"
-                ],
-
-                (
-                    "//span[@class='snize-overhidden']",
-                    [".//span[contains(@class,'snize-title')]"],
-                    ".//span[contains(@class,'snize-price')] | .//span[contains(@class,'snize-discounted-price')]",
-                    "//li[contains(@id,'snize-product')]/a[@href]"
-                )
-            ),
+        # "https://www.urbanindustry.co.uk/":
+        #     (
+        #         (
+        #             None,
+        #             None,
+        #         ),
+        #
+        #         (
+        #             None,
+        #             "//input[@id='Search-In-Modal']",
+        #             "//input[@id='Search-In-Modal']",
+        #         ),
+        #
+        #         [
+        #             'document.getElementById("SortBy")[1].setAttribute("selected","selected")',
+        #             'document.getElementById("SortBy")[0].removeAttribute("selected")',
+        #             'document.getElementById("FacetSortForm").submit'
+        #
+        #         ],
+        #
+        #         (
+        #             "//span[@class='snize-overhidden']",
+        #             [".//span[contains(@class,'snize-title')]"],
+        #             ".//span[contains(@class,'snize-price')] | .//span[contains(@class,'snize-discounted-price')]",
+        #             "//li[contains(@id,'snize-product')]/a[@href]"
+        #         )
+        #     ),
 
         "https://www.global.jdsports.com/":
             (
@@ -160,25 +153,6 @@ SITES_INFO: Dict[SITE_NAME,
                     ".//a[contains(@id,'findify') and @href]"
                 )
             ),
-        # TODO There are problems with item names on this website, solve somehow
-
-        # "https://www.glami.cz/":
-        #     (
-        #         ("//button[@id='CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll']",
-        #          "//input[@id='frm-searchForm-squery']",
-        #          "//input[@id='frm-searchForm-squery']"
-        #          ),
-        #         [
-        #             "document.getElementById('category-filter-order-change').children[0].removeAttribute('selected')",
-        #             "document.getElementById('category-filter-order-change').children[1].setAttribute('selected','')",
-        #             "document.getElementById('category-filter-order-change').dispatchEvent(new Event('change'))"
-        #         ],
-        #         (
-        #             "//div[contains(@class,'tracker-item')]",
-        #             ".//div[@class='item__title layer-3 title']",
-        #             "(.//span[@class='price']/span[@class='item-price__new'])[1] | .//span[@class='price']"
-        #         )
-        #     ),
         "https://answear.cz/c/on":
             (
                 (
@@ -324,24 +298,22 @@ SITES_INFO: Dict[SITE_NAME,
                     None, None
                 ),
                 (
-                    [], "//div[@class='icon icon-search_m']", "//input[@type='search']"
+                    None, "//div[@class='icon icon-search_m']", "//input[@type='search']"
                 ),
                 [
-                    "document.evaluate('//span[@class=\"title\" and contains(text(),\"HHV Clothing\")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()",
+                    'document.getElementById(id="items--perspective--filter-list--base-component-strict").click()',
+                    'document.getElementsByClassName("value no_child")[1].click()',
+                    'document.getElementsByClassName("apply")[8].click()',
+                    'document.getElementsByClassName("anchor")[2].click()',
+                    'document.getElementsByClassName("shared--dropdown--options--base-component options flat")['
+                    '3].children[4].click()',
 
-                    "document.evaluate('//div[@class=\"title\" and contains(text(),\"Strict Search\")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()",
-
-                    "document.evaluate('//div[@class=\"apply\" and contains(text(),\"Apply\")]', document, null,XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()",
-
-                    "document.evaluate('//span[@class=\"title\" and contains(text(),\"Relevance\")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()",
-
-                    "document.evaluate('//span[@class=\"title\" and contains(text(),\"Price (ascending)\")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()"
                 ],
                 (
-                    "//turbo-frame[contains(@id,'item_gallery_entry')]",
+                    "//turbo-frame[contains(@data-controller,'items--shared--gallery-entry--base-component') and not(@data-action='')]/div[@class='lower']",
                     [".//span[@class='artist']", ".//span[@class='title']"],
                     "(.//span[@class='special' or @class='regular'])[1]",
-                    ".//a[@href]"
+                    "..//a[@href]"
                 )
             )
     }

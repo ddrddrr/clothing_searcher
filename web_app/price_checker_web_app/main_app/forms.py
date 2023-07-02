@@ -1,5 +1,5 @@
 from django import forms
-from .backend.search_config import HUMAN_READABLE_BRANDS, SUPPORTED_CURRENCIES, SUPPORTED_WEBSITES
+from main_app.backend.item_fetching.search_config import HUMAN_READABLE_BRANDS, SUPPORTED_CURRENCIES
 from django.core.exceptions import ValidationError
 
 

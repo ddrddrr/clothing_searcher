@@ -41,8 +41,8 @@ Here's what we found:
 <ul>
     {% for item in qitems %}
     <li>
-        {{ item.0 }} ---- {% for price in item.1 %} {{ price }} | {% endfor %}<br>
-        Website - {{ item.0.website.name }} ---- <a href="{{ item.link }}"> link </a><br>
+        <b>{{ item.0 }}</b> ---- {% for price in item.1 %} {{ price }} | {% endfor %}<br>
+        Website - {{ item.0.website.name }} ---- <a href="{{ item.0.link }}"> link </a><br>
     </li>
     {% endfor %}
 </ul>

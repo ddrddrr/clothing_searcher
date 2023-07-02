@@ -2,7 +2,7 @@ from django.shortcuts import render
 from .models import BrandStatistics
 from .forms import SearchForm
 from .item_processing import find_items
-from .backend.misc import saveable_to_human_readable
+from main_app.backend.item_fetching.misc import saveable_to_human_readable
 
 
 def search_page(request):

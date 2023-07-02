@@ -2,6 +2,7 @@ from datetime import timedelta
 from main_app.models import UpdateTime
 from django.utils import timezone
 
+CURRENCIES, ITEMS = True, False
 UPDATE_INTERVAL = timedelta(hours=1)
 
 

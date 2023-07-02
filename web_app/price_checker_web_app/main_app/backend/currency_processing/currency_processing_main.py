@@ -82,15 +82,15 @@ from .currency_proc_config import CURRENCY_NAMES, EUR_RE, POUND_RE, CZ_CROWN_RE
 
 
 # https://currency.getgeoapi.com/documentation/
-def get_exchange_rate(currency1: str, currency2: str) -> float:
+def get_exchange_rate(currency1: str, currency2: str) -> str:
     key = "130f624c8a310440fb94de898e6ff0ff5ec12acd"
     params = {"api_key": key, "from": currency1, "to": currency2, "format": "json"}
     url = "https://api.getgeoapi.com/v2/currency/convert"
     exchange_info = requests.get(url, params).json()
-    return float(exchange_info["rates"][currency2]["rate"])
+    return exchange_info["rates"][currency2]["rate"]
 
 
-def get_exchange_rates(base_curr) -> Dict[str, float]:
+def get_exchange_rates(base_curr) -> Dict[str, str]:
     exchange_rates = {}
     for curr in CURRENCY_NAMES:
         exchange_rates[curr] = get_exchange_rate(base_curr, curr)

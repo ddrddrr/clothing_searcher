@@ -1,11 +1,10 @@
 import pytest
 
-from ..web_search import accept_cookies
-from ..website_info import SITES_INFO
+from web_app.price_checker_web_app.main_app.backend.item_fetching.web_search import accept_cookies
+from web_app.price_checker_web_app.main_app.backend.item_fetching.website_info import SITES_INFO
 from ..dirver_config import DRIVER
-from ..search_config import SUPPORTED_QUERIES
-from ..get_items import make_query
-from sys import stderr
+from web_app.price_checker_web_app.main_app.backend.item_fetching.search_config import SUPPORTED_QUERIES
+from web_app.price_checker_web_app.main_app.backend.item_fetching.get_items import make_query
 
 
 @pytest.fixture
@@ -15,7 +14,7 @@ def website_name():
 
 def test_website(website_name):
     if DRIVER is None:
-        print(f"Driver is not initialized", file=stderr)
+        print(f"Driver is not initialized")
         exit(1)
 
     cookie_info, search_info, sort_scripts, xpath_info = SITES_INFO[website_name]
@@ -23,18 +22,18 @@ def test_website(website_name):
     assert accept_cookies(cookie_info[0], cookie_info[1])
 
     print(f"Now working on {website_name}")
-    seach_is_fine = True
     for brand, models in SUPPORTED_QUERIES.items():
         for model in models:
             query = brand + ' ' + model
             query_res = make_query(query, search_info, sort_scripts, xpath_info)
             if query_res is None:
-                seach_is_fine = False
-                break
-
-            print(website_name, brand, query_res)
-
-        if not seach_is_fine:
-            break
+                assert False
+            print(website_name, brand, query)
+            for item in query_res:
+                #print(item)
+                try:
+                    print(f"{item.name} -- {item.price} -- {item.link}")
+                except Exception as _:
+                    pass
 
     DRIVER.quit()

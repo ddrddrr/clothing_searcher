@@ -1,49 +1,45 @@
 from time import sleep
 from typing import Tuple, List, Optional
-from .web_search import make_search, sort_items_on_page, get_currency_and_item_info, accept_cookies, NAME, PRICE, HREF
+from .web_search import make_search, sort_items_on_page, get_currency_and_item_info, accept_cookies
 from .website_info import SITES_INFO, SEARCH_INFO, SORT_SCRIPT, XPATH_INFO
-from .misc import strip_website_name
-from .dirver_config import DRIVER
+from .misc import strip_website_name, human_readable_to_saveable
+from ..dirver_config import DRIVER
 from .search_config import ITEM_COUNT_LIMIT, SUPPORTED_QUERIES
-from sys import stderr
+from .item_processing import FoundItem
 
 
 def make_query(query: str, search_info: SEARCH_INFO,
                sort_scripts: List[SORT_SCRIPT], xpath_info: XPATH_INFO) \
-        -> Optional[Tuple[str, List[Tuple[NAME, PRICE, HREF]]]]:
+        -> Optional[List[FoundItem]]:
     if not make_search(query, search_info[0], search_info[1], search_info[2]):
-        print(f"Could not make a search on query {query}, skipping", file=stderr)
+        print(f"Could not make a search on query {query}, skipping")
         return None
 
     if not sort_items_on_page(sort_scripts):
-        print("Could not execute one of sorting scripts, skipping", file=stderr)
         return None
 
-    # TODO change that to something proper
-    sleep(2)
-
-    currency_and_items = get_currency_and_item_info(xpath_info, ITEM_COUNT_LIMIT, query)
-    if currency_and_items is None:
-        print("Could not gather info about items, skipping", file=stderr)
+    items = get_currency_and_item_info(xpath_info, ITEM_COUNT_LIMIT, query)
+    if items is None:
+        print("Could not gather info about items, skipping")
         return None
     print("Got currency and items")
-    return currency_and_items
+    return items
 
 
-def get_item_info() -> Tuple[str, str, Tuple[str, List[Tuple[NAME, PRICE, HREF]]]]:
+def get_item_info() -> Tuple[str, str, List[FoundItem]]:
     if DRIVER is None:
-        print(f"Driver is not initialized", file=stderr)
+        print(f"Driver is not initialized")
         exit(1)
 
     for website_name, (cookie_info, search_info, sort_scripts, xpath_info) in SITES_INFO.items():
         try:
             DRIVER.get(website_name)
         except Exception as ex:
-            print(f"{ex}\nCould not open {website_name}, skipping", file=stderr)
+            print(f"{ex}\nCould not open {website_name}, skipping")
             continue
 
         if not accept_cookies(cookie_info[0], cookie_info[1]):
-            print(f"Could not accept cookies on {website_name}, skipping", file=stderr)
+            print(f"Could not accept cookies on {website_name}, skipping")
             continue
 
         print(f"Now working on {website_name}")
@@ -51,12 +47,12 @@ def get_item_info() -> Tuple[str, str, Tuple[str, List[Tuple[NAME, PRICE, HREF]]
         for brand, models in SUPPORTED_QUERIES.items():
             for model in models:
                 query = brand + ' ' + model
-                query_res = make_query(query, search_info, sort_scripts, xpath_info)
-                if query_res is None:
+                items = make_query(query, search_info, sort_scripts, xpath_info)
+                if items is None:
                     seach_is_fine = False
                     break
 
-                yield website_name, brand, query_res
+                yield website_name, human_readable_to_saveable(brand), items
 
             if not seach_is_fine:
                 break
@@ -79,4 +75,3 @@ def take_screenshots():
                 DRIVER.save_screenshot(screenshot_path)
             except Exception as ex:
                 print(f"{name}\n{ex}")
-

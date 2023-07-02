@@ -1,6 +1,6 @@
-from .misc import saveable_to_human_readable
-from .website_info import SITES_INFO
-from typing import Dict, Tuple
+from ..item_fetching.misc import saveable_to_human_readable
+from ..item_fetching.website_info import SITES_INFO
+from typing import Dict, List
 
 PRICEFILES_DIR = r".\prices"
 
@@ -11,10 +11,13 @@ SUPPORTED_CURRENCIES = (("EUR", "Euro"),
                         ("GBP", "British pound"),
                         ("CZK", "Czech crown"),
                         ("RUB", "Russian ruble"))
-SUPPORTED_QUERIES: Dict[str, Tuple[str]] = {
-    "Adidas": ("Gazelle",),
-    # "Adidas": ("Gazelle", "Samba", "Forum"),
-    # "New Balance": ("2002", "574", "991"),
-    # "Reebok": ("Club C", "Classic", "Beatnik")
+SUPPORTED_QUERIES: Dict[str, List[str]] = {
+    "Adidas": ["Gazelle", "Samba", "Forum"],
+    # "New Balance": ["2002", "574", "991"],
+    # "Reebok": ["Club C", "Classic", "Beatnik"]
 }
+# all in seconds
 ITEM_COUNT_LIMIT = 20
+SLEEP_FOR_WAITS = 3
+SLEEP_BETWEEN_SCRIPTS = 0.2
+SLEEP_PAGE_REFRESH = 3

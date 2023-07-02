@@ -1,7 +1,5 @@
-from typing import Dict, List, Tuple
 import re
-from datetime import date
-from ..search_config import SUPPORTED_CURRENCIES
+from ..item_fetching.search_config import SUPPORTED_CURRENCIES
 
 CURRENCY_NAMES = tuple([curr for (curr, _) in SUPPORTED_CURRENCIES])
 CURRENCY_NAME = str
