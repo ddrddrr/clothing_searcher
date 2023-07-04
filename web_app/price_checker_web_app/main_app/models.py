@@ -50,6 +50,8 @@ class Product(models.Model):
     link = models.URLField(max_length=1000)
     website = models.ForeignKey(Website, on_delete=models.CASCADE)
     brands = models.ManyToManyField(Brand)
+    # path to an image
+    image_path = models.CharField(max_length=512)
 
     # size = models.FloatField(null=True, blank=True)
     # attributes = models.ManyToManyField(AttributeValue)

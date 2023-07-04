@@ -36,13 +36,15 @@ Most popular brands:
 
 {% block p2 %}
 {% if qitems %}
-
+<button onclick="window.location.href='/';">Back to Search</button><br>
+{% load static %}
 Here's what we found:
 <ul>
     {% for item in qitems %}
     <li>
         <b>{{ item.0 }}</b> ---- {% for price in item.1 %} {{ price }} | {% endfor %}<br>
-        Website - {{ item.0.website.name }} ---- <a href="{{ item.0.link }}"> link </a><br>
+                            Website - {{ item.0.website.name }} ---- <a href="{{ item.0.link }}"> link </a><br>
+        <img src="{% static item.0.image_path %}">
     </li>
     {% endfor %}
 </ul>
@@ -53,7 +55,8 @@ Here's what we found:
 
 {% block p3 %}
 {% if no_items %}
-Sorry, couldn't find anything :(
+<button onclick="window.location.href='/';">Back to Search</button><br>
+Sorry, couldn't find anything :(<br>
 Try searching a couple hours later
 {% endif %}
 {% endblock p3 %}

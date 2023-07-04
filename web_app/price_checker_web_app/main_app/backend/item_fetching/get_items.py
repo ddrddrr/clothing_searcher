@@ -1,11 +1,12 @@
+import os.path
 from time import sleep
 from typing import Tuple, List, Optional
 from .web_search import make_search, sort_items_on_page, get_currency_and_item_info, accept_cookies
 from .website_info import SITES_INFO, SEARCH_INFO, SORT_SCRIPT, XPATH_INFO
 from .misc import strip_website_name, human_readable_to_saveable
 from ..dirver_config import DRIVER
-from .search_config import ITEM_COUNT_LIMIT, SUPPORTED_QUERIES
-from .item_processing import FoundItem
+from .search_config import ITEM_COUNT_LIMIT, SUPPORTED_QUERIES, SCREENSHOT_DIRECTORY
+from .item_processing import FoundItem, clear_screenshot_dir
 
 
 def make_query(query: str, search_info: SEARCH_INFO,
@@ -30,6 +31,9 @@ def get_item_info() -> Tuple[str, str, List[FoundItem]]:
     if DRIVER is None:
         print(f"Driver is not initialized")
         exit(1)
+    if not os.path.isdir(SCREENSHOT_DIRECTORY):
+        os.makedirs(SCREENSHOT_DIRECTORY)
+    clear_screenshot_dir()
 
     for website_name, (cookie_info, search_info, sort_scripts, xpath_info) in SITES_INFO.items():
         try:
@@ -41,7 +45,6 @@ def get_item_info() -> Tuple[str, str, List[FoundItem]]:
         if not accept_cookies(cookie_info[0], cookie_info[1]):
             print(f"Could not accept cookies on {website_name}, skipping")
             continue
-
         print(f"Now working on {website_name}")
         seach_is_fine = True
         for brand, models in SUPPORTED_QUERIES.items():

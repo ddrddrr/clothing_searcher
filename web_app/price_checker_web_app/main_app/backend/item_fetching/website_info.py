@@ -7,6 +7,7 @@ COOKIE_SCRIPTS = SEARCH_SCRIPTS = Optional[List[str]]
 
 COOKIE_INFO = Tuple[COOKIE_SCRIPTS, Optional[COOKIE_BUTTON]]
 SEARCH_INFO = Tuple[SEARCH_SCRIPTS, Optional[SEARCH_BUTTON], Optional[SEARCH_FIELD]]
+# ALL_ITEMS_XPATH should link to the biggest possible "item object", which will include the picture, name, price, href
 XPATH_INFO = Tuple[ALL_ITEMS_XPATH, List[NAME_XPATH], PRICE_XPATH, HREF_XPATH]
 
 SITES_INFO: Dict[SITE_NAME,
@@ -38,7 +39,7 @@ SITES_INFO: Dict[SITE_NAME,
                 ],
 
                 (
-                    "//ul[@id='productListMain']/li//span[contains(@class,'itemInformation')]",
+                    "//ul[@id='productListMain']//li[@class='productListItem ' or @class='productListItem last']",
                     [".//a[@data-e2e='product-listing-name']"],
                     ".//span[@class='pri' and @data-e2e='product-listing-price'] | "
                     ".//span[@class='now']/span[@data-oi-price='']",
@@ -66,7 +67,7 @@ SITES_INFO: Dict[SITE_NAME,
                 ],
 
                 (
-                    "//ul[@id='productListMain']/li//span[contains(@class,'itemInformation')]",
+                    "//ul[@id='productListMain']//li[@class='productListItem ' or @class='productListItem last']",
                     [".//a[@data-e2e='product-listing-name']"],
                     ".//span[@class='pri' and @data-e2e='product-listing-price'] | "
                     ".//span[@class='now']/span[@data-oi-price='']",
@@ -132,14 +133,14 @@ SITES_INFO: Dict[SITE_NAME,
         "https://en.afew-store.com/":
             (
                 (
-                    None,
-                    None,
+                    ["await new Promise(r => setTimeout(r, 2000));"],
+                    "//button[@id='onetrust-reject-all-handler']",
                 ),
 
                 (
+                    [],
                     None,
-                    "//input[@name='q' and @type='search']",
-                    "//input[@name='q' and @type='search']",
+                    None
                 ),
 
                 [
@@ -298,7 +299,11 @@ SITES_INFO: Dict[SITE_NAME,
                     None, None
                 ),
                 (
-                    None, "//div[@class='icon icon-search_m']", "//input[@type='search']"
+                    ['document.getElementsByClassName("header--localization--base-component localization")[0].click()',
+                     'document.getElementsByClassName("button")[2].click()',
+                     'document.getElementsByClassName("apply")[0].click()',
+                     'document.getElementsByClassName("close icon-cross_m")[4].click()']
+                    , "//div[@class='icon icon-search_m']", "//input[@type='search']"
                 ),
                 [
                     'document.getElementById(id="items--perspective--filter-list--base-component-strict").click()',
@@ -310,10 +315,11 @@ SITES_INFO: Dict[SITE_NAME,
 
                 ],
                 (
-                    "//turbo-frame[contains(@data-controller,'items--shared--gallery-entry--base-component') and not(@data-action='')]/div[@class='lower']",
-                    [".//span[@class='artist']", ".//span[@class='title']"],
-                    "(.//span[@class='special' or @class='regular'])[1]",
-                    "..//a[@href]"
+                    "//turbo-frame[contains(@data-controller,'items--shared--gallery-entry--base-component') and not(@data-action='')]",
+                    [".//div[@class='lower'][1]//span[@class='artist']",
+                     ".//div[@class='lower'][1]//span[@class='title']"],
+                    "(.//div[@class='lower'][1]//span[@class='special' or @class='regular'])[1]",
+                    ".//a[@href][1]"
                 )
             )
     }

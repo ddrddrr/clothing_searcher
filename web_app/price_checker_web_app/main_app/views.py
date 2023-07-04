@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from .models import BrandStatistics
 from .forms import SearchForm
-from .item_processing import find_items
+from .model_processing import find_items
 from main_app.backend.item_fetching.misc import saveable_to_human_readable
 
 
@@ -12,7 +12,7 @@ def search_page(request):
     # is_valid() strips all data
     print(request.GET)
     if "search_submit" in request.GET:
-        print("all good")
+        print("Search  button clicked")
         if search_form.is_valid():
             found_items = find_items(search_form.cleaned_data)
             if not found_items:
@@ -27,13 +27,3 @@ def search_page(request):
                    "brand_stats": stats}
 
     return render(request, search_template, context)
-
-# def create_item(request):
-#     template = r"main_app\create_item.html"
-#     create_item_form = CreateItemForm(request.GET)
-#     context = {"create_form": create_item_form}
-#     if create_item_form.is_valid():
-#         create_product(create_item_form.cleaned_data)
-#         context = {}
-#
-#     return render(request, template, context)

@@ -4,7 +4,7 @@ from time import sleep
 from typing import Optional, List, Tuple
 from .item_processing import FoundItem as fitem
 from ..currency_processing.currency_processing_main import find_currency_in_str
-from .website_info import COOKIE_INFO, SEARCH_INFO, XPATH_INFO
+from .website_info import XPATH_INFO
 from ..dirver_config import DRIVER, MAX_SCRIPT_REPEAT
 from .search_config import SLEEP_BETWEEN_SCRIPTS
 from .waits import (wait_appear_xpath, wait_clickable_xpath,
@@ -12,6 +12,7 @@ from .waits import (wait_appear_xpath, wait_clickable_xpath,
 
 
 def accept_cookies(non_standart_button_scripts: Optional[List[str]], cookie_button_xpath: Optional[str]) -> bool:
+    print("Trying to accept cookies")
     if non_standart_button_scripts is not None:
         if execute_scripts(non_standart_button_scripts):
             print("Clicked cookie button")
@@ -44,22 +45,22 @@ def accept_cookies(non_standart_button_scripts: Optional[List[str]], cookie_butt
 @wait_page_refresh_decorator
 def make_search(query: str, non_standard_seacrh_scripts: Optional[List[str]],
                 search_button_xpath: Optional[str], search_field_xpath: str) -> bool:
+    print("Trying to make search")
     if non_standard_seacrh_scripts is not None:
         if execute_scripts(non_standard_seacrh_scripts):
 
             # SPECIAL CASES #################################################################
-            if DRIVER.current_url == "https://www.43einhalb.com/#":
+            if "43einhalb.com" in DRIVER.current_url:
                 buf = "document.getElementById('search_word').value=" + "'" + query + "'"
                 DRIVER.execute_script(buf)
                 DRIVER.execute_script("document.getElementById('pageSearchDesktop').submit()")
             #################################################################################
-
+            if "afew-store.com" in DRIVER.current_url:
+                buf = "document.querySelector(\"[name='q']\").value=" + "'" + query + "'"
+                DRIVER.execute_script(buf)
+                DRIVER.execute_script("document.querySelector(\"[action='/search']\").submit()")
+            #################################################################################
             print("Successfully executed search scripts")
-        if search_button_xpath is None and search_field_xpath is None:
-            return True
-        else:
-            print("In case of non-standard search scripts, search has to be made only using them")
-            return False
 
     if search_button_xpath is not None:
         search_button = wait_clickable_xpath(search_button_xpath)
@@ -93,14 +94,8 @@ def make_search(query: str, non_standard_seacrh_scripts: Optional[List[str]],
     return True
 
 
-def prep_item_gathering(query: str, cookie_info: COOKIE_INFO, search_info: SEARCH_INFO) -> bool:
-    cookie_button_xpath, cookie_scripts = cookie_info
-    seacrh_scripts, search_button_xpath, search_field_xpath = search_info
-    return (accept_cookies(cookie_button_xpath, cookie_scripts) and
-            make_search(query, seacrh_scripts, search_button_xpath, search_field_xpath))
-
-
 def execute_scripts(scripts: List[str], max_script_repeat=MAX_SCRIPT_REPEAT) -> bool:
+    print("Trying to execute scripts")
     i = 0
     same_script_count = 0
     while i < len(scripts):
@@ -131,6 +126,7 @@ def sort_items_on_page(scripts: List[str]) -> bool:
 
 
 def get_all_items(all_items_xpath):
+    print("Getting all items")
     single_item = wait_appear_xpath(all_items_xpath)
     if single_item is not None:
         all_items = DRIVER.find_elements(By.XPATH, all_items_xpath)
@@ -140,6 +136,7 @@ def get_all_items(all_items_xpath):
 
 
 def get_current_currency(all_items, price_xpath):
+    print("Establishing currency")
     try:
         currency_str = all_items[0].find_elements(By.XPATH, price_xpath)[0].get_attribute("textContent")
     except Exception as ex:
@@ -175,8 +172,10 @@ def retrieve_website_items(item_limit: int, all_items,
                            name_xpaths: List[str], price_xpath: str, href_xpath: str,
                            current_url: str, query_words: List[str],
                            currency: str) -> Optional[List[fitem]]:
+    print("Gathering info about items")
     items = []
-    for i, item in enumerate(all_items, item_limit):
+    for i in range(item_limit):
+        item = all_items[i]
 
         name, price, href = get_price_name_href(item, name_xpaths, price_xpath, href_xpath)
         if name is None or price is None:
@@ -190,7 +189,8 @@ def retrieve_website_items(item_limit: int, all_items,
             if res is None:
                 return None
             name, price = res
-            new_item = fitem(name, price, currency, href)
+
+            new_item = fitem(name, price, currency, href, fitem.take_screenshot(item))
             items.append(new_item)
 
     return items
@@ -198,8 +198,7 @@ def retrieve_website_items(item_limit: int, all_items,
 
 def get_currency_and_item_info(xpaths: XPATH_INFO, item_count_limit: int, query: str) \
         -> Optional[List[fitem]]:
-    # TODO it will be prepared in to_python() of the django form in future
-    lst_query = query.lower().split()
+    lst_query = query.split()
     all_items_xpath, name_xpaths, price_xpath, href_xpath = xpaths
     current_url = DRIVER.current_url
 

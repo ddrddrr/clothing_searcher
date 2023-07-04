@@ -1,4 +1,4 @@
-from typing import List, Any, Union, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 
 def merge_two_sorted_iterables(lst1: Union[List[Any], Tuple[Any]],
