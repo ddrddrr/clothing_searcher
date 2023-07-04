@@ -228,3 +228,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Item pictures
+web_app/price_checker_web_app/static/item_screenshots
