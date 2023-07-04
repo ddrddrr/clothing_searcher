@@ -231,3 +231,4 @@ cython_debug/
 
 # Item pictures
 web_app/price_checker_web_app/static/item_screenshots
+web_app/price_checker_web_app/item_screenshots
